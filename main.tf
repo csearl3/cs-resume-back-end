@@ -29,7 +29,7 @@ locals {
 
 resource "aws_api_gateway_rest_api" "api" {
   name = "cs-resume-API"
-  body = file("${path.module}/openapi.json")
+  body = file("${path.module}/openapi-dev.json")
   endpoint_configuration {
     types = ["REGIONAL"]
   }
