@@ -15,7 +15,7 @@ terraform {
 
 # Configure the AWS Provider
 provider "aws" {
-  region              = var.region
+  region = var.region
 }
 
 data "aws_caller_identity" "current" {}
@@ -44,19 +44,19 @@ resource "aws_api_gateway_deployment" "deployment" {
 }
 
 resource "aws_api_gateway_stage" "stage" {
-  depends_on    = [ aws_cloudwatch_log_group.api_group ]
+  depends_on    = [aws_cloudwatch_log_group.api_group]
   deployment_id = aws_api_gateway_deployment.deployment.id
   rest_api_id   = aws_api_gateway_rest_api.api.id
   stage_name    = var.dev_prefix
 }
 
 resource "aws_api_gateway_method_settings" "logging" {
-  depends_on  = [ aws_api_gateway_account.settings ]
+  depends_on  = [aws_api_gateway_account.settings]
   rest_api_id = aws_api_gateway_rest_api.api.id
   stage_name  = aws_api_gateway_stage.stage.stage_name
   method_path = "*/*"
   settings {
-    logging_level   = "INFO"
+    logging_level          = "INFO"
     throttling_rate_limit  = 100
     throttling_burst_limit = 50
   }
@@ -125,7 +125,7 @@ resource "aws_lambda_function" "unique" {
   ]
   environment {
     variables = {
-      TABLE_NAME = "uniqueIP-table"
+      TABLE_NAME     = "uniqueIP-table"
       PYTHONHASHSEED = 7
     }
   }
@@ -136,7 +136,7 @@ resource "aws_lambda_permission" "unique_apigw" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.unique.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn = "arn:aws:execute-api:${var.region}:${local.account_id}:${aws_api_gateway_rest_api.api.id}/*/*/uniquelambda"
+  source_arn    = "arn:aws:execute-api:${var.region}:${local.account_id}:${aws_api_gateway_rest_api.api.id}/*/*/uniquelambda"
 }
 
 resource "aws_cloudwatch_log_group" "lambda_group" {
@@ -231,9 +231,9 @@ resource "aws_cloudwatch_log_group" "lambda_group2" {
 # DYNAMODB CONFIGURATION
 
 resource "aws_dynamodb_table" "unique_table" {
-  name           = "uniqueIP-table"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "IP_Hash"
+  name         = "uniqueIP-table"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "IP_Hash"
   attribute {
     name = "IP_Hash"
     type = "S"
@@ -241,9 +241,9 @@ resource "aws_dynamodb_table" "unique_table" {
 }
 
 resource "aws_dynamodb_table" "counter_table" {
-  name           = "visitCount-table"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "stat"
+  name         = "visitCount-table"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "stat"
   attribute {
     name = "stat"
     type = "S"
@@ -280,7 +280,10 @@ data "aws_iam_policy_document" "allow_access" {
       type        = "*"
       identifiers = ["*"]
     }
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.bucket.arn}/*",]
+    actions = ["s3:GetObject"]
+    resources = [
+      aws_s3_bucket.bucket.arn,
+      "${aws_s3_bucket.bucket.arn}/*",
+    ]
   }
 }
