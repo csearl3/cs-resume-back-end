@@ -25,47 +25,6 @@ locals {
   account_id = data.aws_caller_identity.current.account_id
 }
 
-# GITHUB ACTIONS CONFIGURATION
-
-resource "aws_iam_openid_connect_provider" "oidc" {
-  url = "https://token.actions.githubusercontent.com"
-  client_id_list = [
-    "sts.amazonaws.com",
-  ]
-  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
-}
-
-resource "aws_iam_role" "gh" {
-  name                = "github_actions_role"
-  assume_role_policy  = data.aws_iam_policy_document.assume_role_oidc.json
-}
-
-resource "aws_iam_role_policy_attachment" "gh_policy" {
-  role       = aws_iam_role.gh.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
-}
-
-data "aws_iam_policy_document" "assume_role_oidc" {
-  statement {
-    effect = "Allow"
-    principals {
-      type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.oidc.arn]
-    }
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    condition {
-      test     = "StringEquals"
-      variable = "token.actions.githubusercontent.com:aud"
-      values   = ["sts.amazonaws.com"]
-    }
-    condition {
-      test     = "StringLike"
-      variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:csearl3/cs-resume-front-end:*"]
-    }
-  }
-}
-
 # API CONFIGURATION
 
 resource "aws_api_gateway_rest_api" "api" {
