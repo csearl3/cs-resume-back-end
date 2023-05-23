@@ -26,6 +26,12 @@ jobs:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v3
+
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       
     # Configure AWS credentials for GitHub Actions runner
     - name: AWS Credentials
@@ -34,11 +40,11 @@ jobs:
         role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_DEV }}
         aws-region: us-east-1
 
-    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+    - name: Set AWS credentials as env vars
+      run: |
+        echo "AWS_ACCESS_KEY_ID : ${{ env.AWS_ACCESS_KEY_ID }}"
+        echo "AWS_SECRET_ACCESS_KEY : ${{ env.AWS_SECRET_ACCESS_KEY }}"
+        echo "AWS_SESSION_TOKEN : ${{ env.AWS_SESSION_TOKEN }}"
 
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
