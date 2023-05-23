@@ -5,14 +5,7 @@ terraform {
       version = "~> 4.0"
     }
   }
-  backend "remote" {
-    hostname = "app.terraform.io"
-    organization = "csearle"
 
-    workspaces {
-      name = "cs-resume-back-end-dev"
-    }
-  }
 }
 
 # Configure the AWS Provider
