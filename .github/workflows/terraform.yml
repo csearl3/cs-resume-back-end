@@ -40,11 +40,6 @@ jobs:
         role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_DEV }}
         aws-region: us-east-1
 
-    - name: Set AWS credentials as env vars
-      run: |
-        export AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }}
-        export AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}
-
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: terraform init
