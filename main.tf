@@ -18,8 +18,6 @@ terraform {
 # Configure the AWS Provider
 provider "aws" {
   region              = var.region
-  shared_config_files = []
-  profile             = var.dev_prefix
 }
 
 data "aws_caller_identity" "current" {}
@@ -42,9 +40,9 @@ resource "aws_iam_role" "gh" {
   assume_role_policy  = data.aws_iam_policy_document.assume_role_oidc.json
 }
 
-resource "aws_iam_role_policy_attachment" "s3_policy" {
+resource "aws_iam_role_policy_attachment" "gh_policy" {
   role       = aws_iam_role.gh.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
 data "aws_iam_policy_document" "assume_role_oidc" {
