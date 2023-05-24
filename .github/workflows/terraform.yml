@@ -3,13 +3,15 @@ name: 'Terraform'
 on:
   push:
     branches: test
+  pull_request:
+    branches: main
 
 permissions:
   contents: read
 
 jobs:
   terraform:
-    name: 'Setup Dev Environment'
+    name: 'Setup/Destroy Dev Environment'
     runs-on: ubuntu-latest
     environment: development
     permissions:
@@ -45,15 +47,27 @@ jobs:
 
     # Verify whether a configuration is syntactically valid and internally consistent, regardless of any provided variables or existing state
     - name: Terraform Validate
+      if: github.ref == 'refs/heads/test' && github.event_name == 'push'
       run: terraform validate -json
 
-    # Generates an execution plan for Terraform
+    # Generates an execution plan for Terraform on push to "test"
     - name: Terraform Plan
+      if: github.ref == 'refs/heads/test' && github.event_name == 'push'
       run: terraform plan -input=false
+      
+    # Generates a destroy plan for Terraform on pull request to "main"
+    - name: Terraform Plan
+      if: github.ref == 'refs/heads/main' && github.event_name == 'pull_request'
+      run: terraform plan -destroy -out=destroy.tfplan -input=false
 
-    # On push to "main", build or change infrastructure according to Terraform configuration files
+    # On push to "test", build or change infrastructure according to Terraform configuration files
     # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
     - name: Terraform Apply
       if: github.ref == 'refs/heads/test' && github.event_name == 'push'
       run: terraform apply -auto-approve -input=false
+      
+    # On pull request to "main", destroy all infrastructure
+    - name: Terraform Destroy
+      if: github.ref == 'refs/heads/main' && github.event_name == 'pull_request'
+      run: terraform apply destroy.tfplan
       
