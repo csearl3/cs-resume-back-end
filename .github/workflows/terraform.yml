@@ -45,7 +45,7 @@ jobs:
 
     # Verify whether a configuration is syntactically valid and internally consistent, regardless of any provided variables or existing state
     - name: Terraform Validate
-      run: terraform valide -json
+      run: terraform validate -json
 
     # Generates an execution plan for Terraform
     - name: Terraform Plan
