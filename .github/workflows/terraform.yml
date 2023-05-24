@@ -2,19 +2,18 @@ name: 'Terraform'
 
 on:
   push:
-    branches: nothing
+    branches: test
 
 permissions:
   contents: read
 
 jobs:
   terraform:
-    name: 'Terraform'
+    name: 'Setup Dev Environment'
     runs-on: ubuntu-latest
     environment: development
     permissions:
       id-token: write
-      contents: read
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -43,17 +42,17 @@ jobs:
     - name: Terraform Init
       run: terraform init -input=false
 
-    # Checks that all Terraform configuration files adhere to a canonical format
-    - name: Terraform Format
-      run: terraform fmt
+    # Verify whether a configuration is syntactically valid and internally consistent, regardless of any provided variables or existing state
+    - name: Terraform Validate
+      run: terraform valide -json
 
     # Generates an execution plan for Terraform
     - name: Terraform Plan
-      run: terraform plan -destroy -out=destroy.tfplan -input=false
+      run: terraform plan -input=false
 
     # On push to "main", build or change infrastructure according to Terraform configuration files
     # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-    - name: Terraform Destroy
-      if: github.ref == 'refs/heads/nothing' && github.event_name == 'no'
-      run: terraform apply destroy.tfplan
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/test' && github.event_name == 'push'
+      run: terraform apply -auto-approve -input=false
       
