@@ -1,7 +1,7 @@
 name: 'Terraform'
 
 on:
-  push:
+  pull_request:
     branches: main
 
 permissions:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   terraform:
-    name: 'Terraform'
+    name: 'Destroy Dev Environment'
     runs-on: ubuntu-latest
     environment: development
     permissions:
@@ -43,17 +43,13 @@ jobs:
     - name: Terraform Init
       run: terraform init -input=false
 
-    # Checks that all Terraform configuration files adhere to a canonical format
-    - name: Terraform Format
-      run: terraform fmt -diff
-
-    # Generates an execution plan for Terraform
+    # Generates a destroy plan for Terraform
     - name: Terraform Plan
-      run: terraform plan -input=false
+      run: terraform plan -destroy -out=destroy.tfplan -input=false
 
-    # On push to "main", build or change infrastructure according to Terraform configuration files
+    # On pull request to "main", destroy all infrastructure
     # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve -input=false
+    - name: Terraform Destroy
+      if: github.ref == 'refs/heads/main' && github.event_name == 'pull_request'
+      run: terraform apply destroy.tfplan
       
