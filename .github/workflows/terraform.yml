@@ -1,1 +1,73 @@
+name: 'Terraform'
 
+on:
+  push:
+    branches: test
+  pull_request_target:
+    types: closed
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    name: 'Setup/Destroy Dev Environment'
+    runs-on: ubuntu-latest
+    environment: development
+    permissions:
+      id-token: write
+      contents: read
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      
+    # Configure AWS credentials for GitHub Actions runner
+    - name: AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_DEV }}
+        aws-region: us-east-1
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init -input=false
+
+    # Verify whether a configuration is syntactically valid and internally consistent, regardless of any provided variables or existing state
+    - name: Terraform Validate
+      if: github.ref == 'refs/heads/test' && github.event_name == 'push'
+      run: terraform validate -json
+
+    # Generates an execution plan for Terraform on push to "test"
+    - name: Terraform Plan
+      if: github.ref == 'refs/heads/test' && github.event_name == 'push'
+      run: terraform plan -input=false
+      
+    # Generates a destroy plan for Terraform on pull request to "main"
+    - name: Terraform Plan
+      if: github.event.pull_request.merged == true
+      run: terraform plan -destroy -out=destroy.tfplan -input=false
+
+    # On push to "test", build or change infrastructure according to Terraform configuration files
+    # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/test' && github.event_name == 'push'
+      run: terraform apply -auto-approve -input=false
+      
+    # On pull request to "main", destroy all infrastructure
+    - name: Terraform Destroy
+      if: github.event.pull_request.merged == true
+      run: terraform apply destroy.tfplan
+      
