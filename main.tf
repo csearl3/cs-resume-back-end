@@ -534,7 +534,7 @@ resource "aws_s3_bucket_public_access_block" "block" {
 }
 
 resource "aws_s3_bucket_policy" "allow_access" {
-  depends on = [aws_s3_bucket.bucket]
+  depends_on = [aws_s3_bucket.bucket]
   bucket     = aws_s3_bucket.bucket.id
   policy     = data.aws_iam_policy_document.allow_access.json
 }
