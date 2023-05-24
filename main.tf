@@ -27,16 +27,282 @@ locals {
 
 resource "aws_api_gateway_rest_api" "api" {
   name = "cs-resume-API"
-  body = file("${path.module}/openapi-dev.json")
   endpoint_configuration {
     types = ["REGIONAL"]
+  }
+}
+
+resource "aws_api_gateway_resource" "unique" {
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "uniquelambda"
+  rest_api_id = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "unique_get" {
+  authorization = "NONE"
+  http_method   = "GET"
+  resource_id   = aws_api_gateway_resource.unique.id
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "unique_options" {
+  authorization = "NONE"
+  http_method   = "OPTIONS"
+  resource_id   = aws_api_gateway_resource.unique.id
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_integration" "unique_int_get" {
+  http_method             = aws_api_gateway_method.unique_get.http_method
+  resource_id             = aws_api_gateway_resource.unique.id
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  content_handling        = "CONVERT_TO_TEXT"
+  uri                     = aws_lambda_function.unique.invoke_arn
+}
+
+resource "aws_api_gateway_integration" "unique_int_options" {
+  http_method = aws_api_gateway_method.unique_options.http_method
+  resource_id = aws_api_gateway_resource.unique.id
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "unique_get_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.unique.id
+  http_method = aws_api_gateway_method.unique_get.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+}
+
+resource "aws_api_gateway_method_response" "unique_options_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.unique.id
+  http_method = aws_api_gateway_method.unique_options.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "unique_get_int_response" {
+  depends_on  = [aws_api_gateway_integration.unique_int_get]
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.unique.id
+  http_method = aws_api_gateway_method.unique_get.http_method
+  status_code = aws_api_gateway_method_response.unique_get_response.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "unique_options_int_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.unique.id
+  http_method = aws_api_gateway_method.unique_options.http_method
+  status_code = aws_api_gateway_method_response.unique_options_response.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+resource "aws_api_gateway_resource" "counter" {
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "countlambda"
+  rest_api_id = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "counter_get" {
+  authorization = "NONE"
+  http_method   = "GET"
+  resource_id   = aws_api_gateway_resource.counter.id
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "counter_post" {
+  authorization = "NONE"
+  http_method   = "POST"
+  resource_id   = aws_api_gateway_resource.counter.id
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "counter_options" {
+  authorization = "NONE"
+  http_method   = "OPTIONS"
+  resource_id   = aws_api_gateway_resource.counter.id
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_integration" "counter_int_get" {
+  http_method             = aws_api_gateway_method.counter_get.http_method
+  resource_id             = aws_api_gateway_resource.counter.id
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  content_handling        = "CONVERT_TO_TEXT"
+  uri                     = aws_lambda_function.counter.invoke_arn
+}
+
+resource "aws_api_gateway_integration" "counter_int_post" {
+  http_method             = aws_api_gateway_method.counter_post.http_method
+  resource_id             = aws_api_gateway_resource.counter.id
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  content_handling        = "CONVERT_TO_TEXT"
+  uri                     = aws_lambda_function.counter.invoke_arn
+}
+
+resource "aws_api_gateway_integration" "counter_int_options" {
+  http_method = aws_api_gateway_method.counter_options.http_method
+  resource_id = aws_api_gateway_resource.counter.id
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "counter_get_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.counter.id
+  http_method = aws_api_gateway_method.counter_get.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+}
+
+resource "aws_api_gateway_method_response" "counter_post_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.counter.id
+  http_method = aws_api_gateway_method.counter_post.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+}
+
+resource "aws_api_gateway_method_response" "counter_options_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.counter.id
+  http_method = aws_api_gateway_method.counter_options.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "counter_get_int_response" {
+  depends_on  = [aws_api_gateway_integration.counter_int_get]
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.counter.id
+  http_method = aws_api_gateway_method.counter_get.http_method
+  status_code = aws_api_gateway_method_response.counter_get_response.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "counter_post_int_response" {
+  depends_on  = [aws_api_gateway_integration.counter_int_post]
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.counter.id
+  http_method = aws_api_gateway_method.counter_post.http_method
+  status_code = aws_api_gateway_method_response.counter_post_response.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "counter_options_int_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.counter.id
+  http_method = aws_api_gateway_method.counter_options.http_method
+  status_code = aws_api_gateway_method_response.counter_options_response.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "default4xx" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "DEFAULT_4XX"
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Methods" : "'GET,OPTIONS,POST'",
+    "gatewayresponse.header.Access-Control-Allow-Origin" : "'*'",
+    "gatewayresponse.header.Access-Control-Allow-Headers" : "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "default5xx" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "DEFAULT_5XX"
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Methods" : "'GET,OPTIONS,POST'",
+    "gatewayresponse.header.Access-Control-Allow-Origin" : "'*'",
+    "gatewayresponse.header.Access-Control-Allow-Headers" : "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
   }
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.api.body))
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.unique.id,
+      aws_api_gateway_method.unique_get.id,
+      aws_api_gateway_method.unique_options.id,
+      aws_api_gateway_integration.unique_int_get.id,
+      aws_api_gateway_integration.unique_int_options.id,
+      aws_api_gateway_method_response.unique_get_response.id,
+      aws_api_gateway_method_response.unique_options_response.id,
+      aws_api_gateway_integration_response.unique_get_int_response.id,
+      aws_api_gateway_integration_response.unique_options_int_response.id,
+      aws_api_gateway_method.counter_get.id,
+      aws_api_gateway_method.counter_post.id,
+      aws_api_gateway_method.counter_options.id,
+      aws_api_gateway_integration.counter_int_get.id,
+      aws_api_gateway_integration.counter_int_post.id,
+      aws_api_gateway_integration.counter_int_options.id,
+      aws_api_gateway_method_response.counter_get_response.id,
+      aws_api_gateway_method_response.counter_post_response.id,
+      aws_api_gateway_method_response.counter_options_response.id,
+      aws_api_gateway_integration_response.counter_get_int_response.id,
+      aws_api_gateway_integration_response.counter_post_int_response.id,
+      aws_api_gateway_integration_response.counter_options_int_response.id,
+      aws_api_gateway_gateway_response.default4xx.id,
+      aws_api_gateway_gateway_response.default5xx.id,
+    ]))
   }
   lifecycle {
     create_before_destroy = true
@@ -126,7 +392,6 @@ resource "aws_lambda_function" "unique" {
   environment {
     variables = {
       TABLE_NAME     = "uniqueIP-table"
-      PYTHONHASHSEED = 7
     }
   }
 }
@@ -136,7 +401,7 @@ resource "aws_lambda_permission" "unique_apigw" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.unique.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:${var.region}:${local.account_id}:${aws_api_gateway_rest_api.api.id}/*/*/uniquelambda"
+  source_arn    = "arn:aws:execute-api:${var.region}:${local.account_id}:${aws_api_gateway_rest_api.api.id}/*/*${aws_api_gateway_resource.unique.path}"
 }
 
 resource "aws_cloudwatch_log_group" "lambda_group" {
@@ -269,8 +534,9 @@ resource "aws_s3_bucket_public_access_block" "block" {
 }
 
 resource "aws_s3_bucket_policy" "allow_access" {
-  bucket = aws_s3_bucket.bucket.id
-  policy = data.aws_iam_policy_document.allow_access.json
+  depends_on = [aws_s3_bucket.bucket]
+  bucket     = aws_s3_bucket.bucket.id
+  policy     = data.aws_iam_policy_document.allow_access.json
 }
 
 data "aws_iam_policy_document" "allow_access" {
