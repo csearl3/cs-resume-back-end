@@ -3,8 +3,8 @@ name: 'Terraform'
 on:
   push:
     branches: test
-  pull_request:
-    branches: main
+  pull_request_target:
+    types: closed
 
 permissions:
   contents: read
@@ -57,7 +57,7 @@ jobs:
       
     # Generates a destroy plan for Terraform on pull request to "main"
     - name: Terraform Plan
-      if: github.ref == 'refs/heads/main' && github.event_name == 'pull_request'
+      if: github.event.pull_request.merged == true
       run: terraform plan -destroy -out=destroy.tfplan -input=false
 
     # On push to "test", build or change infrastructure according to Terraform configuration files
@@ -68,6 +68,6 @@ jobs:
       
     # On pull request to "main", destroy all infrastructure
     - name: Terraform Destroy
-      if: github.ref == 'refs/heads/main' && github.event_name == 'pull_request'
+      if: github.event.pull_request.merged == true
       run: terraform apply destroy.tfplan
       
