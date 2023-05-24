@@ -279,29 +279,29 @@ resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   triggers = {
     redeployment = sha1(jsonencode([
-      aws_api_gateway_resource.unique,
-      aws_api_gateway_method.unique_get,
-      aws_api_gateway_method.unique_options,
-      aws_api_gateway_integration.unique_int_get,
-      aws_api_gateway_integration.unique_int_options,
-      aws_api_gateway_method_response.unique_get_response,
-      aws_api_gateway_method_response.unique_options_response,
-      aws_api_gateway_integration_response.unique_get_int_response,
-      aws_api_gateway_integration_response.unique_options_int_response,
-      aws_api_gateway_method.counter_get,
-      aws_api_gateway_method.counter_post,
-      aws_api_gateway_method.counter_options,
-      aws_api_gateway_integration.counter_int_get,
-      aws_api_gateway_integration.counter_int_post,
-      aws_api_gateway_integration.counter_int_options,
-      aws_api_gateway_method_response.counter_get_response,
-      aws_api_gateway_method_response.counter_post_response,
-      aws_api_gateway_method_response.counter_options_response,
-      aws_api_gateway_integration_response.counter_get_int_response,
-      aws_api_gateway_integration_response.counter_post_int_response,
-      aws_api_gateway_integration_response.counter_options_int_response,
-      aws_api_gateway_gateway_response.default4xx,
-      aws_api_gateway_gateway_response.default5xx,
+      aws_api_gateway_resource.unique.id,
+      aws_api_gateway_method.unique_get.id,
+      aws_api_gateway_method.unique_options.id,
+      aws_api_gateway_integration.unique_int_get.id,
+      aws_api_gateway_integration.unique_int_options.id,
+      aws_api_gateway_method_response.unique_get_response.id,
+      aws_api_gateway_method_response.unique_options_response.id,
+      aws_api_gateway_integration_response.unique_get_int_response.id,
+      aws_api_gateway_integration_response.unique_options_int_response.id,
+      aws_api_gateway_method.counter_get.id,
+      aws_api_gateway_method.counter_post.id,
+      aws_api_gateway_method.counter_options.id,
+      aws_api_gateway_integration.counter_int_get.id,
+      aws_api_gateway_integration.counter_int_post.id,
+      aws_api_gateway_integration.counter_int_options.id,
+      aws_api_gateway_method_response.counter_get_response.id,
+      aws_api_gateway_method_response.counter_post_response.id,
+      aws_api_gateway_method_response.counter_options_response.id,
+      aws_api_gateway_integration_response.counter_get_int_response.id,
+      aws_api_gateway_integration_response.counter_post_int_response.id,
+      aws_api_gateway_integration_response.counter_options_int_response.id,
+      aws_api_gateway_gateway_response.default4xx.id,
+      aws_api_gateway_gateway_response.default5xx.id,
     ]))
   }
   lifecycle {
@@ -534,8 +534,9 @@ resource "aws_s3_bucket_public_access_block" "block" {
 }
 
 resource "aws_s3_bucket_policy" "allow_access" {
-  bucket = aws_s3_bucket.bucket.id
-  policy = data.aws_iam_policy_document.allow_access.json
+  depends on = [aws_s3_bucket.bucket]
+  bucket     = aws_s3_bucket.bucket.id
+  policy     = data.aws_iam_policy_document.allow_access.json
 }
 
 data "aws_iam_policy_document" "allow_access" {
